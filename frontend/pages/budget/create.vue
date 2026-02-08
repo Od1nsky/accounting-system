@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/budget'" />
-      <h1 class="text-h4 ml-4">Create Budget</h1>
+      <h1 class="text-h4 ml-4">Создание бюджета</h1>
     </div>
 
     <v-card max-width="800">
@@ -16,13 +16,13 @@
           />
           <v-text-field
             v-model="form.category"
-            label="Category"
+            label="Категория"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.type"
-            label="Type"
+            label="Тип"
             type="text"
             variant="outlined"
           />
@@ -46,21 +46,21 @@
           />
           <v-textarea
             v-model="form.notes"
-            label="Notes"
+            label="Примечания"
             variant="outlined"
             rows="3"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/budget'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -74,6 +74,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
@@ -96,9 +98,10 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     await api.post('/api/budgets', form.value)
+    success('Бюджет создан')
     router.push('/budget')
   } catch (error) {
-    console.error('Failed to create budget:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }

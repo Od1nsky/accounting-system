@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-h4 mb-6">Dashboard</h1>
+    <h1 class="text-h4 mb-6">Панель администратора</h1>
 
     <!-- Stats Cards -->
     <v-row>
@@ -33,7 +33,7 @@
                 />
                 {{ Math.abs(stat.change) }}%
               </v-chip>
-              <span class="text-caption text-medium-emphasis ml-2">vs last month</span>
+              <span class="text-caption text-medium-emphasis ml-2">к прошлому месяцу</span>
             </div>
           </v-card-text>
         </v-card>
@@ -46,12 +46,12 @@
         <v-card>
           <v-card-title>
             <v-icon start>mdi-chart-line</v-icon>
-            Activity Overview
+            Обзор активности
           </v-card-title>
           <v-card-text>
             <div class="text-center py-8 text-medium-emphasis">
               <v-icon size="64">mdi-chart-areaspline</v-icon>
-              <div class="mt-2">Chart placeholder - integrate Chart.js here</div>
+              <div class="mt-2">График — интеграция Chart.js</div>
             </div>
           </v-card-text>
         </v-card>
@@ -61,12 +61,12 @@
         <v-card>
           <v-card-title>
             <v-icon start>mdi-account-group</v-icon>
-            User Distribution
+            Распределение пользователей
           </v-card-title>
           <v-card-text>
             <div class="text-center py-8 text-medium-emphasis">
               <v-icon size="64">mdi-chart-donut</v-icon>
-              <div class="mt-2">Chart placeholder - integrate Chart.js here</div>
+              <div class="mt-2">График — интеграция Chart.js</div>
             </div>
           </v-card-text>
         </v-card>
@@ -79,7 +79,7 @@
         <v-card>
           <v-card-title>
             <v-icon start>mdi-clock-outline</v-icon>
-            Recent Activity
+            Недавняя активность
           </v-card-title>
           <v-card-text>
             <v-list>
@@ -100,7 +100,7 @@
         <v-card>
           <v-card-title>
             <v-icon start>mdi-account-multiple</v-icon>
-            Latest Users
+            Последние пользователи
           </v-card-title>
           <v-card-text>
             <v-list>
@@ -140,20 +140,21 @@ definePageMeta({
 })
 
 const api = useApi()
+const { error: showError } = useSnackbar()
 
 const stats = ref([
-  { title: 'Total Users', value: '0', icon: 'mdi-account-multiple', color: 'primary', change: 12 },
-  { title: 'Active Sessions', value: '0', icon: 'mdi-account-clock', color: 'success', change: 5 },
-  { title: 'Total Revenue', value: '$0', icon: 'mdi-currency-usd', color: 'info', change: -3 },
-  { title: 'New Today', value: '0', icon: 'mdi-account-plus', color: 'warning', change: 8 },
+  { title: 'Всего пользователей', value: '0', icon: 'mdi-account-multiple', color: 'primary', change: 12 },
+  { title: 'Активные сессии', value: '0', icon: 'mdi-account-clock', color: 'success', change: 5 },
+  { title: 'Доход', value: '$0', icon: 'mdi-currency-usd', color: 'info', change: -3 },
+  { title: 'Новых сегодня', value: '0', icon: 'mdi-account-plus', color: 'warning', change: 8 },
 ])
 
 const recentActivity = ref([
-  { title: 'New user registered', time: '5 minutes ago', icon: 'mdi-account-plus' },
-  { title: 'Database backup completed', time: '1 hour ago', icon: 'mdi-database-check' },
-  { title: 'User profile updated', time: '2 hours ago', icon: 'mdi-account-edit' },
-  { title: 'System maintenance', time: '5 hours ago', icon: 'mdi-wrench' },
-  { title: 'Security scan completed', time: '1 day ago', icon: 'mdi-shield-check' },
+  { title: 'Новый пользователь зарегистрирован', time: '5 мин. назад', icon: 'mdi-account-plus' },
+  { title: 'Резервная копия создана', time: '1 ч. назад', icon: 'mdi-database-check' },
+  { title: 'Профиль пользователя обновлён', time: '2 ч. назад', icon: 'mdi-account-edit' },
+  { title: 'Обслуживание системы', time: '5 ч. назад', icon: 'mdi-wrench' },
+  { title: 'Проверка безопасности завершена', time: '1 дн. назад', icon: 'mdi-shield-check' },
 ])
 
 const latestUsers = ref<any[]>([])
@@ -176,7 +177,7 @@ const fetchStats = async () => {
 
     latestUsers.value = users.slice(0, 5)
   } catch (error) {
-    console.error('Failed to fetch stats:', error)
+    showError('Не удалось загрузить статистику')
   }
 }
 

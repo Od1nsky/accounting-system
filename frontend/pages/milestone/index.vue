@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h4">Milestone</h1>
+      <h1 class="text-h4">Этапы</h1>
       <v-btn color="primary" to="/milestone/create">
         <v-icon start>mdi-plus</v-icon>
-        Create New
+        Создать
       </v-btn>
     </div>
 
@@ -20,7 +20,7 @@
               icon="mdi-pencil"
               size="small"
               variant="text"
-              :to="`/${entityLower}/edit/${item.id}`"
+              :to="`/milestone/edit/${item.id}`"
             />
             <v-btn
               icon="mdi-delete"
@@ -37,14 +37,14 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="500">
       <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+        <v-card-title>Подтвердить удаление</v-card-title>
         <v-card-text>
-          Are you sure you want to delete this item?
+          Вы уверены, что хотите удалить эту запись?
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="deleteItem">Delete</v-btn>
+          <v-btn @click="deleteDialog = false">Отмена</v-btn>
+          <v-btn color="error" @click="deleteItem">Удалить</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -56,6 +56,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const items = ref<any[]>([])
 const loading = ref(false)
@@ -64,15 +66,15 @@ const itemToDelete = ref<any>(null)
 
 const headers = [
   { title: 'ID', key: 'id' },
-  { title: 'ProjectId', key: 'projectId' },
-  { title: 'Name', key: 'name' },
-  { title: 'Description', key: 'description' },
-  { title: 'DueDate', key: 'dueDate' },
-  { title: 'CompletedDate', key: 'completedDate' },
-  { title: 'Status', key: 'status' },
-  { title: 'PaymentAmount', key: 'paymentAmount' },
-  { title: 'Paid', key: 'paid' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: 'Проект', key: 'projectId' },
+  { title: 'Название', key: 'name' },
+  { title: 'Описание', key: 'description' },
+  { title: 'Срок', key: 'dueDate' },
+  { title: 'Дата завершения', key: 'completedDate' },
+  { title: 'Статус', key: 'status' },
+  { title: 'Сумма к оплате', key: 'paymentAmount' },
+  { title: 'Оплачено', key: 'paid' },
+  { title: 'Действия', key: 'actions', sortable: false },
 ]
 
 const fetchItems = async () => {
@@ -81,7 +83,7 @@ const fetchItems = async () => {
     const response = await api.get('/api/milestones')
     items.value = response.data
   } catch (error) {
-    console.error('Failed to fetch milestones:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -96,12 +98,13 @@ const deleteItem = async () => {
   if (!itemToDelete.value) return
 
   try {
-    await api.delete(`/api/${entityPlural}/${itemToDelete.value.id}`)
+    await api.delete(`/api/milestones/${itemToDelete.value.id}`)
     items.value = items.value.filter(i => i.id !== itemToDelete.value.id)
     deleteDialog.value = false
+    success('Запись удалена')
     itemToDelete.value = null
   } catch (error) {
-    console.error('Failed to delete item:', error)
+    showError('Не удалось удалить запись')
   }
 }
 

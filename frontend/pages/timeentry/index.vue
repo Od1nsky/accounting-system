@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h4">TimeEntry</h1>
+      <h1 class="text-h4">Учёт времени</h1>
       <v-btn color="primary" to="/timeentry/create">
         <v-icon start>mdi-plus</v-icon>
-        Create New
+        Создать
       </v-btn>
     </div>
 
@@ -37,14 +37,14 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="500">
       <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+        <v-card-title>Подтвердить удаление</v-card-title>
         <v-card-text>
-          Are you sure you want to delete this item?
+          Вы уверены, что хотите удалить эту запись?
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="deleteItem">Delete</v-btn>
+          <v-btn @click="deleteDialog = false">Отмена</v-btn>
+          <v-btn color="error" @click="deleteItem">Удалить</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -56,6 +56,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const items = ref<any[]>([])
 const loading = ref(false)
@@ -64,25 +66,25 @@ const itemToDelete = ref<any>(null)
 
 const headers = [
   { title: 'ID', key: 'id' },
-  { title: 'EmployeeId', key: 'employeeId' },
-  { title: 'ProjectId', key: 'projectId' },
+  { title: 'Сотрудник', key: 'employeeId' },
+  { title: 'Проект', key: 'projectId' },
   { title: 'TaskId', key: 'taskId' },
-  { title: 'Date', key: 'date' },
+  { title: 'Дата', key: 'date' },
   { title: 'Hours', key: 'hours' },
-  { title: 'Description', key: 'description' },
+  { title: 'Описание', key: 'description' },
   { title: 'Billable', key: 'billable' },
-  { title: 'HourlyRate', key: 'hourlyRate' },
-  { title: 'Approved', key: 'approved' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: 'Ставка в час', key: 'hourlyRate' },
+  { title: 'Согласовано', key: 'approved' },
+  { title: 'Действия', key: 'actions', sortable: false },
 ]
 
 const fetchItems = async () => {
   loading.value = true
   try {
-    const response = await api.get('/api/timeentrys')
+    const response = await api.get('/api/time-entries')
     items.value = response.data
   } catch (error) {
-    console.error('Failed to fetch timeentrys:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -100,9 +102,10 @@ const deleteItem = async () => {
     await api.delete(`/api/${entityPlural}/${itemToDelete.value.id}`)
     items.value = items.value.filter(i => i.id !== itemToDelete.value.id)
     deleteDialog.value = false
+    success('Запись удалена')
     itemToDelete.value = null
   } catch (error) {
-    console.error('Failed to delete item:', error)
+    showError('Не удалось удалить запись')
   }
 }
 

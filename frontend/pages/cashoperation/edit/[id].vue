@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/cashoperation'" />
-      <h1 class="text-h4 ml-4">Edit CashOperation</h1>
+      <h1 class="text-h4 ml-4">Редактирование кассовой операции</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
@@ -10,19 +10,19 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="datetime-local"
             variant="outlined"
           />
           <v-text-field
             v-model="form.type"
-            label="Type"
+            label="Тип"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.amount"
-            label="Amount"
+            label="Сумма"
             type="number"
             variant="outlined"
           />
@@ -38,35 +38,43 @@
             variant="outlined"
             rows="3"
           />
-          <v-text-field
+                    <v-select
             v-model="form.counterpartyId"
-            label="CounterpartyId"
-            type="number"
+            label="Контрагент"
             variant="outlined"
+            :items="counterpartyOptions.items"
+            :item-title="counterpartyOptions.itemTitle"
+            :item-value="counterpartyOptions.itemValue"
+            :loading="counterpartyOptions.loading"
+            clearable
           />
-          <v-text-field
+                    <v-select
             v-model="form.employeeId"
-            label="EmployeeId"
-            type="number"
+            label="Сотрудник"
             variant="outlined"
+            :items="employeeOptions.items"
+            :item-title="employeeTitle"
+            :item-value="employeeOptions.itemValue"
+            :loading="employeeOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.documentNumber"
-            label="DocumentNumber"
+            label="Номер документа"
             type="text"
             variant="outlined"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/cashoperation'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -86,6 +94,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -93,24 +103,32 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const counterpartyOptions = useRelationOptions('/api/counterparties')
+const employeeOptions = useRelationOptions('/api/employees')
+const employeeTitle = (item: any) => {
+  if (!item) return ''
+  const first = item.firstName ?? item.firstname
+  const last = item.lastName ?? item.lastname
+  return [first, last].filter(Boolean).join(' ') || String(item.id ?? '')
+}
 const form = ref({
   date: '',
   type: '',
   amount: 0,
   currency: '',
   purpose: '',
-  counterpartyId: 0,
-  employeeId: 0,
+  counterpartyId: null as number | null,
+  employeeId: null as number | null,
   documentNumber: ''
 })
 
 const fetchItem = async () => {
   loading.value = true
   try {
-    const response = await api.get(`/api/cashoperations/${route.params.id}`)
+    const response = await api.get(`/api/cash-operations/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -122,16 +140,19 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
-    await api.put(`/api/cashoperations/${route.params.id}`, form.value)
+    await api.put(`/api/cash-operations/${route.params.id}`, form.value)
+    success('Кассовая операция обновлена')
     router.push('/cashoperation')
   } catch (error) {
-    console.error('Failed to update cashoperation:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  counterpartyOptions.fetchOptions()
+  employeeOptions.fetchOptions()
   fetchItem()
 })
 </script>

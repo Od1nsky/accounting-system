@@ -2,17 +2,21 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/depreciation'" />
-      <h1 class="text-h4 ml-4">Edit Depreciation</h1>
+      <h1 class="text-h4 ml-4">Редактирование амортизации</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-text-field
+                    <v-select
             v-model="form.assetId"
-            label="AssetId"
-            type="number"
+            label="Актив"
             variant="outlined"
+            :items="assetOptions.items"
+            :item-title="assetOptions.itemTitle"
+            :item-value="assetOptions.itemValue"
+            :loading="assetOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.period"
@@ -22,7 +26,7 @@
           />
           <v-text-field
             v-model="form.amount"
-            label="Amount"
+            label="Сумма"
             type="number"
             variant="outlined"
           />
@@ -40,19 +44,19 @@
           />
           <v-checkbox
             v-model="form.posted"
-            label="Posted"
+            label="Проведён"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/depreciation'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -72,6 +76,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -79,8 +85,9 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const assetOptions = useRelationOptions('/api/assets')
 const form = ref({
-  assetId: 0,
+  assetId: null as number | null,
   period: '',
   amount: 0,
   accumulatedAmount: 0,
@@ -94,7 +101,7 @@ const fetchItem = async () => {
     const response = await api.get(`/api/depreciations/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -107,15 +114,17 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.put(`/api/depreciations/${route.params.id}`, form.value)
+    success('Амортизация обновлена')
     router.push('/depreciation')
   } catch (error) {
-    console.error('Failed to update depreciation:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  assetOptions.fetchOptions()
   fetchItem()
 })
 </script>

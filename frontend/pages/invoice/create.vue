@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/invoice'" />
-      <h1 class="text-h4 ml-4">Create Invoice</h1>
+      <h1 class="text-h4 ml-4">Создание накладной</h1>
     </div>
 
     <v-card max-width="800">
@@ -10,33 +10,43 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.number"
-            label="Number"
+            label="Номер"
             type="text"
             variant="outlined"
           />
-          <v-text-field
+          <v-select
             v-model="form.counterpartyId"
-            label="CounterpartyId"
-            type="number"
+            label="Контрагент"
             variant="outlined"
+            :items="counterpartyOptions.items"
+            :item-title="counterpartyOptions.itemTitle"
+            :item-value="counterpartyOptions.itemValue"
+            :loading="counterpartyOptions.loading"
+            clearable
           />
-          <v-text-field
+          <v-select
             v-model="form.contractId"
-            label="ContractId"
-            type="number"
+            label="Договор"
             variant="outlined"
+            :items="contractOptions.items"
+            :item-title="contractOptions.itemTitle"
+            :item-value="contractOptions.itemValue"
+            :loading="contractOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="date"
             variant="outlined"
+            :rules="[dateSensibleRule]"
           />
           <v-text-field
             v-model="form.dueDate"
-            label="DueDate"
+            label="Срок оплаты"
             type="date"
             variant="outlined"
+            :rules="[dateSensibleRule]"
           />
           <v-text-field
             v-model="form.totalAmount"
@@ -52,7 +62,7 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
@@ -62,21 +72,22 @@
           />
           <v-text-field
             v-model="form.paidDate"
-            label="PaidDate"
+            label="Дата оплаты"
             type="date"
             variant="outlined"
+            :rules="[dateNotFutureRule]"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/invoice'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -86,19 +97,30 @@
 </template>
 
 <script setup lang="ts">
+import { dateSensibleRule, dateNotFutureRule } from '~/utils/validation'
+
 definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
 const loading = ref(false)
 
+const counterpartyOptions = useRelationOptions('/api/counterparties')
+const contractOptions = useRelationOptions('/api/contracts', { titleKey: 'number' })
+onMounted(() => {
+  counterpartyOptions.fetchOptions()
+  contractOptions.fetchOptions()
+})
+
 const form = ref({
   number: '',
-  counterpartyId: 0,
-  contractId: 0,
+  counterpartyId: null as number | null,
+  contractId: null as number | null,
   date: '',
   dueDate: '',
   totalAmount: 0,
@@ -114,10 +136,16 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await api.post('/api/invoices', form.value)
+    const payload = {
+      ...form.value,
+      counterpartyId: Number(form.value.counterpartyId) || 0,
+      contractId: Number(form.value.contractId) || 0
+    }
+    await api.post('/api/invoices', payload)
+    success('Счёт-фактура создан')
     router.push('/invoice')
   } catch (error) {
-    console.error('Failed to create invoice:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }

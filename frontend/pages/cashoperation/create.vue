@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/cashoperation'" />
-      <h1 class="text-h4 ml-4">Create CashOperation</h1>
+      <h1 class="text-h4 ml-4">Создание кассовой операции</h1>
     </div>
 
     <v-card max-width="800">
@@ -10,19 +10,19 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="datetime-local"
             variant="outlined"
           />
           <v-text-field
             v-model="form.type"
-            label="Type"
+            label="Тип"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.amount"
-            label="Amount"
+            label="Сумма"
             type="number"
             variant="outlined"
           />
@@ -38,35 +38,43 @@
             variant="outlined"
             rows="3"
           />
-          <v-text-field
+          <v-select
             v-model="form.counterpartyId"
-            label="CounterpartyId"
-            type="number"
+            label="Контрагент"
             variant="outlined"
+            :items="counterpartyOptions.items"
+            :item-title="counterpartyOptions.itemTitle"
+            :item-value="counterpartyOptions.itemValue"
+            :loading="counterpartyOptions.loading"
+            clearable
           />
-          <v-text-field
+          <v-select
             v-model="form.employeeId"
-            label="EmployeeId"
-            type="number"
+            label="Сотрудник"
             variant="outlined"
+            :items="employeeOptions.items"
+            :item-title="employeeTitle"
+            :item-value="employeeOptions.itemValue"
+            :loading="employeeOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.documentNumber"
-            label="DocumentNumber"
+            label="Номер документа"
             type="text"
             variant="outlined"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/cashoperation'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -80,10 +88,26 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
 const loading = ref(false)
+
+const counterpartyOptions = useRelationOptions('/api/counterparties')
+const employeeOptions = useRelationOptions('/api/employees')
+onMounted(() => {
+  counterpartyOptions.fetchOptions()
+  employeeOptions.fetchOptions()
+})
+
+const employeeTitle = (item: any) => {
+  if (!item) return ''
+  const first = item.firstName ?? item.firstname
+  const last = item.lastName ?? item.lastname
+  return [first, last].filter(Boolean).join(' ') || String(item.id ?? '')
+}
 
 const form = ref({
   date: '',
@@ -91,8 +115,8 @@ const form = ref({
   amount: 0,
   currency: '',
   purpose: '',
-  counterpartyId: 0,
-  employeeId: 0,
+  counterpartyId: null as number | null,
+  employeeId: null as number | null,
   documentNumber: ''
 })
 
@@ -102,10 +126,16 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await api.post('/api/cashoperations', form.value)
+    const payload = {
+      ...form.value,
+      counterpartyId: Number(form.value.counterpartyId) || 0,
+      employeeId: Number(form.value.employeeId) || 0
+    }
+    await api.post('/api/cash-operations', payload)
+    success('Кассовая операция создана')
     router.push('/cashoperation')
   } catch (error) {
-    console.error('Failed to create cashoperation:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }

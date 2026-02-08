@@ -2,17 +2,21 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/reconciliation'" />
-      <h1 class="text-h4 ml-4">Edit Reconciliation</h1>
+      <h1 class="text-h4 ml-4">Редактирование сверки</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-text-field
+                    <v-select
             v-model="form.counterpartyId"
-            label="CounterpartyId"
-            type="number"
+            label="Контрагент"
             variant="outlined"
+            :items="counterpartyOptions.items"
+            :item-title="counterpartyOptions.itemTitle"
+            :item-value="counterpartyOptions.itemValue"
+            :loading="counterpartyOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.startDate"
@@ -46,27 +50,27 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
           <v-textarea
             v-model="form.notes"
-            label="Notes"
+            label="Примечания"
             variant="outlined"
             rows="3"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/reconciliation'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -86,6 +90,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -93,8 +99,9 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const counterpartyOptions = useRelationOptions('/api/counterparties')
 const form = ref({
-  counterpartyId: 0,
+  counterpartyId: null as number | null,
   startDate: '',
   endDate: '',
   ourBalance: 0,
@@ -110,7 +117,7 @@ const fetchItem = async () => {
     const response = await api.get(`/api/reconciliations/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -123,15 +130,17 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.put(`/api/reconciliations/${route.params.id}`, form.value)
+    success('Сверка обновлена')
     router.push('/reconciliation')
   } catch (error) {
-    console.error('Failed to update reconciliation:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  counterpartyOptions.fetchOptions()
   fetchItem()
 })
 </script>

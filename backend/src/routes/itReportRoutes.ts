@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { ITReportController } from '../controllers/itReportController';
-import { authMiddleware } from '../middleware/authMiddleware';
+import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
 // All routes require authentication
-router.use(authMiddleware);
+router.use(authenticate);
 
 // Project & Financial Reports
 router.get('/project-profitability', ITReportController.getProjectProfitability);

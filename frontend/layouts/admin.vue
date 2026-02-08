@@ -25,7 +25,7 @@
 
     <v-app-bar>
       <v-app-bar-nav-icon @click="drawer = !drawer" />
-      <v-toolbar-title>Admin Panel</v-toolbar-title>
+      <v-toolbar-title>Панель администратора</v-toolbar-title>
 
       <v-spacer />
 
@@ -52,9 +52,9 @@ const router = useRouter()
 const drawer = ref(true)
 
 const menuItems = [
-  { title: 'Dashboard', icon: 'mdi-view-dashboard', to: '/admin' },
-  { title: 'Users', icon: 'mdi-account-multiple', to: '/admin/users' },
-  { title: 'Settings', icon: 'mdi-cog', to: '/admin/settings' },
+  { title: 'Панель управления', icon: 'mdi-view-dashboard', to: '/admin' },
+  { title: 'Пользователи', icon: 'mdi-account-multiple', to: '/admin/users' },
+  { title: 'Настройки', icon: 'mdi-cog', to: '/admin/settings' },
 ]
 
 const handleLogout = async () => {

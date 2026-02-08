@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/transaction'" />
-      <h1 class="text-h4 ml-4">Edit Transaction</h1>
+      <h1 class="text-h4 ml-4">Редактирование транзакции</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
@@ -10,61 +10,61 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="datetime-local"
             variant="outlined"
           />
           <v-text-field
             v-model="form.debitAccount"
-            label="DebitAccount"
+            label="Счёт дебет"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.creditAccount"
-            label="CreditAccount"
+            label="Счёт кредит"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.amount"
-            label="Amount"
+            label="Сумма"
             type="number"
             variant="outlined"
           />
           <v-textarea
             v-model="form.description"
-            label="Description"
+            label="Описание"
             variant="outlined"
             rows="3"
           />
           <v-text-field
             v-model="form.documentNumber"
-            label="DocumentNumber"
+            label="Номер документа"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.documentType"
-            label="DocumentType"
+            label="Тип документа"
             type="text"
             variant="outlined"
           />
           <v-checkbox
             v-model="form.posted"
-            label="Posted"
+            label="Проведён"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/transaction'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -84,6 +84,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -108,7 +110,7 @@ const fetchItem = async () => {
     const response = await api.get(`/api/transactions/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -121,9 +123,10 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.put(`/api/transactions/${route.params.id}`, form.value)
+    success('Транзакция обновлена')
     router.push('/transaction')
   } catch (error) {
-    console.error('Failed to update transaction:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }

@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/asset'" />
-      <h1 class="text-h4 ml-4">Create Asset</h1>
+      <h1 class="text-h4 ml-4">Создание актива</h1>
     </div>
 
     <v-card max-width="800">
@@ -10,7 +10,7 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.name"
-            label="Name"
+            label="Название"
             type="text"
             variant="outlined"
           />
@@ -22,21 +22,22 @@
           />
           <v-text-field
             v-model="form.category"
-            label="Category"
+            label="Категория"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.cost"
-            label="Cost"
+            label="Стоимость"
             type="number"
             variant="outlined"
           />
           <v-text-field
             v-model="form.purchaseDate"
-            label="PurchaseDate"
+            label="Дата приобретения"
             type="date"
             variant="outlined"
+            :rules="[dateSensibleRule]"
           />
           <v-text-field
             v-model="form.depreciationRate"
@@ -52,7 +53,7 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
@@ -62,23 +63,27 @@
             type="text"
             variant="outlined"
           />
-          <v-text-field
+          <v-select
             v-model="form.responsiblePersonId"
-            label="ResponsiblePersonId"
-            type="number"
+            label="Ответственный"
             variant="outlined"
+            :items="employeeOptions.items"
+            :item-title="employeeTitle"
+            :item-value="employeeOptions.itemValue"
+            :loading="employeeOptions.loading"
+            clearable
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/asset'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -88,14 +93,27 @@
 </template>
 
 <script setup lang="ts">
+import { dateSensibleRule } from '~/utils/validation'
+
 definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
 const loading = ref(false)
+
+const employeeOptions = useRelationOptions('/api/employees')
+const employeeTitle = (item: any) => {
+  if (!item) return ''
+  const first = item.firstName ?? item.firstname
+  const last = item.lastName ?? item.lastname
+  return [first, last].filter(Boolean).join(' ') || String(item.id ?? '')
+}
+onMounted(() => { employeeOptions.fetchOptions() })
 
 const form = ref({
   name: '',
@@ -107,7 +125,7 @@ const form = ref({
   residualValue: 0,
   status: '',
   location: '',
-  responsiblePersonId: 0
+  responsiblePersonId: null as number | null
 })
 
 const handleSubmit = async () => {
@@ -116,10 +134,12 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await api.post('/api/assets', form.value)
+    const payload = { ...form.value, responsiblePersonId: form.value.responsiblePersonId != null ? Number(form.value.responsiblePersonId) : undefined }
+    await api.post('/api/assets', payload)
+    success('Актив создан')
     router.push('/asset')
   } catch (error) {
-    console.error('Failed to create asset:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }

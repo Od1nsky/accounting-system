@@ -2,17 +2,21 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/salarypayment'" />
-      <h1 class="text-h4 ml-4">Edit SalaryPayment</h1>
+      <h1 class="text-h4 ml-4">Редактирование выплаты зарплаты</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-text-field
+                    <v-select
             v-model="form.employeeId"
-            label="EmployeeId"
-            type="number"
+            label="Сотрудник"
             variant="outlined"
+            :items="employeeOptions.items"
+            :item-title="employeeTitle"
+            :item-value="employeeOptions.itemValue"
+            :loading="employeeOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.period"
@@ -52,21 +56,21 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/salarypayment'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -86,6 +90,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -93,8 +99,15 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const employeeOptions = useRelationOptions('/api/employees')
+const employeeTitle = (item: any) => {
+  if (!item) return ''
+  const first = item.firstName ?? item.firstname
+  const last = item.lastName ?? item.lastname
+  return [first, last].filter(Boolean).join(' ') || String(item.id ?? '')
+}
 const form = ref({
-  employeeId: 0,
+  employeeId: null as number | null,
   period: '',
   baseSalary: 0,
   bonus: 0,
@@ -107,10 +120,10 @@ const form = ref({
 const fetchItem = async () => {
   loading.value = true
   try {
-    const response = await api.get(`/api/salarypayments/${route.params.id}`)
+    const response = await api.get(`/api/salary-payments/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -122,16 +135,18 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
-    await api.put(`/api/salarypayments/${route.params.id}`, form.value)
+    await api.put(`/api/salary-payments/${route.params.id}`, form.value)
+    success('Выплата зарплаты обновлена')
     router.push('/salarypayment')
   } catch (error) {
-    console.error('Failed to update salarypayment:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  employeeOptions.fetchOptions()
   fetchItem()
 })
 </script>

@@ -2,73 +2,85 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/timeentry'" />
-      <h1 class="text-h4 ml-4">Edit TimeEntry</h1>
+      <h1 class="text-h4 ml-4">Редактирование учёта времени</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-text-field
+                    <v-select
             v-model="form.employeeId"
-            label="EmployeeId"
-            type="number"
+            label="Сотрудник"
             variant="outlined"
+            :items="employeeOptions.items"
+            :item-title="employeeTitle"
+            :item-value="employeeOptions.itemValue"
+            :loading="employeeOptions.loading"
+            clearable
           />
-          <v-text-field
+                    <v-select
             v-model="form.projectId"
-            label="ProjectId"
-            type="number"
+            label="Проект"
             variant="outlined"
+            :items="projectOptions.items"
+            :item-title="projectOptions.itemTitle"
+            :item-value="projectOptions.itemValue"
+            :loading="projectOptions.loading"
+            clearable
           />
-          <v-text-field
+                    <v-select
             v-model="form.taskId"
-            label="TaskId"
-            type="number"
+            label="Задача"
             variant="outlined"
+            :items="taskOptions.items"
+            :item-title="taskOptions.itemTitle"
+            :item-value="taskOptions.itemValue"
+            :loading="taskOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="date"
             variant="outlined"
           />
           <v-text-field
             v-model="form.hours"
-            label="Hours"
+            label="Часы"
             type="number"
             variant="outlined"
           />
           <v-textarea
             v-model="form.description"
-            label="Description"
+            label="Описание"
             variant="outlined"
             rows="3"
           />
           <v-checkbox
             v-model="form.billable"
-            label="Billable"
+            label="Оплачиваемый"
           />
           <v-text-field
             v-model="form.hourlyRate"
-            label="HourlyRate"
+            label="Ставка в час"
             type="number"
             variant="outlined"
           />
           <v-checkbox
             v-model="form.approved"
-            label="Approved"
+            label="Согласовано"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/timeentry'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -88,6 +100,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -95,10 +109,19 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const employeeOptions = useRelationOptions('/api/employees')
+const projectOptions = useRelationOptions('/api/projects')
+const taskOptions = useRelationOptions('/api/tasks', { titleKey: 'title' })
+const employeeTitle = (item: any) => {
+  if (!item) return ''
+  const first = item.firstName ?? item.firstname
+  const last = item.lastName ?? item.lastname
+  return [first, last].filter(Boolean).join(' ') || String(item.id ?? '')
+}
 const form = ref({
-  employeeId: 0,
-  projectId: 0,
-  taskId: 0,
+  employeeId: null as number | null,
+  projectId: null as number | null,
+  taskId: null as number | null,
   date: '',
   hours: 0,
   description: '',
@@ -110,10 +133,10 @@ const form = ref({
 const fetchItem = async () => {
   loading.value = true
   try {
-    const response = await api.get(`/api/timeentrys/${route.params.id}`)
+    const response = await api.get(`/api/time-entries/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -125,16 +148,20 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
-    await api.put(`/api/timeentrys/${route.params.id}`, form.value)
+    await api.put(`/api/time-entries/${route.params.id}`, form.value)
+    success('Запись времени обновлена')
     router.push('/timeentry')
   } catch (error) {
-    console.error('Failed to update timeentry:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  employeeOptions.fetchOptions()
+  projectOptions.fetchOptions()
+  taskOptions.fetchOptions()
   fetchItem()
 })
 </script>

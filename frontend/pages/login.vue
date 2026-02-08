@@ -4,7 +4,7 @@
       <v-col cols="12" sm="8" md="4">
         <v-card class="pa-4">
           <v-card-title class="text-h5 text-center">
-            Login
+            Вход
           </v-card-title>
           <v-card-text>
             <v-alert v-if="error" type="error" class="mb-4" closable @click:close="error = ''">
@@ -22,7 +22,7 @@
               />
               <v-text-field
                 v-model="form.password"
-                label="Password"
+                label="Пароль"
                 :type="showPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
@@ -38,14 +38,14 @@
                 block
                 :loading="loading"
               >
-                Login
+                Войти
               </v-btn>
             </v-form>
           </v-card-text>
           <v-card-actions class="justify-center">
-            <span>Don't have an account?</span>
+            <span>Нет аккаунта?</span>
             <v-btn variant="text" color="primary" to="/register">
-              Register
+              Зарегистрироваться
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -81,11 +81,11 @@ const handleLogin = async () => {
   errors.value = {}
 
   if (!form.value.email) {
-    errors.value.email = 'Email is required'
+    errors.value.email = 'Укажите email'
     return
   }
   if (!form.value.password) {
-    errors.value.password = 'Password is required'
+    errors.value.password = 'Укажите пароль'
     return
   }
 
@@ -94,7 +94,7 @@ const handleLogin = async () => {
     await login(form.value.email, form.value.password)
     await router.push('/')
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Login failed'
+    error.value = e.response?.data?.error || 'Ошибка входа'
   } finally {
     loading.value = false
   }

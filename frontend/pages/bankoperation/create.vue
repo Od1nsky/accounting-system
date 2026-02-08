@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/bankoperation'" />
-      <h1 class="text-h4 ml-4">Create BankOperation</h1>
+      <h1 class="text-h4 ml-4">Создание банковской операции</h1>
     </div>
 
     <v-card max-width="800">
@@ -10,19 +10,19 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="datetime-local"
             variant="outlined"
           />
           <v-text-field
             v-model="form.type"
-            label="Type"
+            label="Тип"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.amount"
-            label="Amount"
+            label="Сумма"
             type="number"
             variant="outlined"
           />
@@ -38,11 +38,15 @@
             variant="outlined"
             rows="3"
           />
-          <v-text-field
+          <v-select
             v-model="form.counterpartyId"
-            label="CounterpartyId"
-            type="number"
+            label="Контрагент"
             variant="outlined"
+            :items="counterpartyOptions.items"
+            :item-title="counterpartyOptions.itemTitle"
+            :item-value="counterpartyOptions.itemValue"
+            :loading="counterpartyOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.accountNumber"
@@ -52,27 +56,27 @@
           />
           <v-text-field
             v-model="form.documentNumber"
-            label="DocumentNumber"
+            label="Номер документа"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/bankoperation'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -86,10 +90,15 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
 const loading = ref(false)
+
+const counterpartyOptions = useRelationOptions('/api/counterparties')
+onMounted(() => { counterpartyOptions.fetchOptions() })
 
 const form = ref({
   date: '',
@@ -97,7 +106,7 @@ const form = ref({
   amount: 0,
   currency: '',
   purpose: '',
-  counterpartyId: 0,
+  counterpartyId: null as number | null,
   accountNumber: '',
   documentNumber: '',
   status: ''
@@ -109,10 +118,12 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await api.post('/api/bankoperations', form.value)
+    const payload = { ...form.value, counterpartyId: Number(form.value.counterpartyId) || 0 }
+    await api.post('/api/bank-operations', payload)
+    success('Банковская операция создана')
     router.push('/bankoperation')
   } catch (error) {
-    console.error('Failed to create bankoperation:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }

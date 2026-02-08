@@ -2,27 +2,31 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/milestone'" />
-      <h1 class="text-h4 ml-4">Create Milestone</h1>
+      <h1 class="text-h4 ml-4">Создание этапа</h1>
     </div>
 
     <v-card max-width="800">
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-text-field
+          <v-select
             v-model="form.projectId"
-            label="ProjectId"
-            type="number"
+            label="Проект"
             variant="outlined"
+            :items="projectOptions.items"
+            :item-title="projectOptions.itemTitle"
+            :item-value="projectOptions.itemValue"
+            :loading="projectOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.name"
-            label="Name"
+            label="Название"
             type="text"
             variant="outlined"
           />
           <v-textarea
             v-model="form.description"
-            label="Description"
+            label="Описание"
             variant="outlined"
             rows="3"
           />
@@ -40,7 +44,7 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
@@ -57,14 +61,14 @@
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/milestone'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -78,13 +82,18 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
 const loading = ref(false)
 
+const projectOptions = useRelationOptions('/api/projects')
+onMounted(() => { projectOptions.fetchOptions() })
+
 const form = ref({
-  projectId: 0,
+  projectId: null as number | null,
   name: '',
   description: '',
   dueDate: '',
@@ -100,10 +109,12 @@ const handleSubmit = async () => {
 
   loading.value = true
   try {
-    await api.post('/api/milestones', form.value)
+    const payload = { ...form.value, projectId: Number(form.value.projectId) || 0 }
+    await api.post('/api/milestones', payload)
+    success('Веха создана')
     router.push('/milestone')
   } catch (error) {
-    console.error('Failed to create milestone:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }

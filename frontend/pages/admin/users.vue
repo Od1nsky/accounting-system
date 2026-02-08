@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="d-flex justify-space-between align-center mb-6">
-      <h1 class="text-h4">User Management</h1>
+      <h1 class="text-h4">Управление пользователями</h1>
       <v-btn color="primary" @click="createDialog = true">
         <v-icon start>mdi-account-plus</v-icon>
-        Add User
+        Добавить пользователя
       </v-btn>
     </div>
 
@@ -15,7 +15,7 @@
           <v-col cols="12" md="4">
             <v-text-field
               v-model="search"
-              label="Search"
+              label="Поиск"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
               density="compact"
@@ -26,8 +26,8 @@
           <v-col cols="12" md="3">
             <v-select
               v-model="roleFilter"
-              :items="['All', 'admin', 'user']"
-              label="Filter by Role"
+              :items="['Все', 'admin', 'user']"
+              label="Роль"
               variant="outlined"
               density="compact"
               hide-details
@@ -37,7 +37,7 @@
             <v-select
               v-model="sortBy"
               :items="['name', 'email', 'createdAt']"
-              label="Sort by"
+              label="Сортировка"
               variant="outlined"
               density="compact"
               hide-details
@@ -104,44 +104,44 @@
     <!-- Create/Edit Dialog -->
     <v-dialog v-model="createDialog" max-width="500">
       <v-card>
-        <v-card-title>{{ editingUser ? 'Edit User' : 'Create User' }}</v-card-title>
+        <v-card-title>{{ editingUser ? 'Редактировать пользователя' : 'Создать пользователя' }}</v-card-title>
         <v-card-text>
           <v-form ref="formRef">
             <v-text-field
               v-model="form.name"
-              label="Name"
+              label="Имя"
               variant="outlined"
-              :rules="[v => !!v || 'Name is required']"
+              :rules="[v => !!v || 'Укажите имя']"
             />
             <v-text-field
               v-model="form.email"
               label="Email"
               type="email"
               variant="outlined"
-              :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'Email must be valid']"
+              :rules="[v => !!v || 'Укажите email', v => /.+@.+\..+/.test(v) || 'Некорректный email']"
             />
             <v-text-field
               v-if="!editingUser"
               v-model="form.password"
-              label="Password"
+              label="Пароль"
               type="password"
               variant="outlined"
-              :rules="[v => !!v || 'Password is required', v => v.length >= 6 || 'Password must be at least 6 characters']"
+              :rules="[v => !!v || 'Укажите пароль', v => v.length >= 6 || 'Пароль не менее 6 символов']"
             />
             <v-select
               v-model="form.role"
               :items="['user', 'admin']"
-              label="Role"
+              label="Роль"
               variant="outlined"
-              :rules="[v => !!v || 'Role is required']"
+              :rules="[v => !!v || 'Укажите роль']"
             />
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="closeDialog">Cancel</v-btn>
+          <v-btn @click="closeDialog">Отмена</v-btn>
           <v-btn color="primary" @click="saveUser">
-            {{ editingUser ? 'Update' : 'Create' }}
+            {{ editingUser ? 'Сохранить' : 'Создать' }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -150,14 +150,14 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialog" max-width="400">
       <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+        <v-card-title>Подтвердить удаление</v-card-title>
         <v-card-text>
-          Are you sure you want to delete user "{{ userToDelete?.name }}"?
+          Вы уверены, что хотите удалить пользователя «{{ userToDelete?.name }}»?
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" @click="deleteUser">Delete</v-btn>
+          <v-btn @click="deleteDialog = false">Отмена</v-btn>
+          <v-btn color="error" @click="deleteUser">Удалить</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -176,6 +176,7 @@ definePageMeta({
 
 const api = useApi()
 const { user: currentUser } = useAuth()
+const { success, error: showError } = useSnackbar()
 const users = ref<any[]>([])
 const loading = ref(false)
 const createDialog = ref(false)
@@ -184,7 +185,7 @@ const userToDelete = ref<any>(null)
 const editingUser = ref<any>(null)
 const formRef = ref<any>(null)
 const search = ref('')
-const roleFilter = ref('All')
+const roleFilter = ref('Все')
 const sortBy = ref('name')
 
 const form = ref({
@@ -195,16 +196,16 @@ const form = ref({
 })
 
 const headers = [
-  { title: 'User', key: 'name' },
-  { title: 'Role', key: 'role' },
-  { title: 'Created', key: 'createdAt' },
-  { title: 'Actions', key: 'actions', sortable: false },
+  { title: 'Пользователь', key: 'name' },
+  { title: 'Роль', key: 'role' },
+  { title: 'Создан', key: 'createdAt' },
+  { title: 'Действия', key: 'actions', sortable: false },
 ]
 
 const filteredUsers = computed(() => {
   let filtered = users.value
 
-  if (roleFilter.value !== 'All') {
+  if (roleFilter.value !== 'Все') {
     filtered = filtered.filter(u => u.role === roleFilter.value)
   }
 
@@ -217,7 +218,7 @@ const fetchUsers = async () => {
     const response = await api.get('/api/auth/users')
     users.value = response.data
   } catch (error) {
-    console.error('Failed to fetch users:', error)
+    showError('Не удалось загрузить пользователей')
   } finally {
     loading.value = false
   }
@@ -255,8 +256,9 @@ const saveUser = async () => {
     }
     await fetchUsers()
     closeDialog()
+    success(editingUser.value ? 'Пользователь обновлён' : 'Пользователь создан')
   } catch (error) {
-    console.error('Failed to save user:', error)
+    showError('Не удалось сохранить пользователя')
   }
 }
 
@@ -268,8 +270,9 @@ const deleteUser = async () => {
     users.value = users.value.filter(u => u.id !== userToDelete.value.id)
     deleteDialog.value = false
     userToDelete.value = null
+    success('Пользователь удалён')
   } catch (error) {
-    console.error('Failed to delete user:', error)
+    showError('Не удалось удалить пользователя')
   }
 }
 

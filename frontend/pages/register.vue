@@ -4,7 +4,7 @@
       <v-col cols="12" sm="8" md="4">
         <v-card class="pa-4">
           <v-card-title class="text-h5 text-center">
-            Register
+            Регистрация
           </v-card-title>
           <v-card-text>
             <v-alert v-if="error" type="error" class="mb-4" closable @click:close="error = ''">
@@ -13,7 +13,7 @@
             <v-form @submit.prevent="handleRegister">
               <v-text-field
                 v-model="form.name"
-                label="Name"
+                label="Имя"
                 prepend-inner-icon="mdi-account"
                 variant="outlined"
                 class="mb-2"
@@ -30,7 +30,7 @@
               />
               <v-text-field
                 v-model="form.password"
-                label="Password"
+                label="Пароль"
                 :type="showPassword ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
                 :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
@@ -46,14 +46,14 @@
                 block
                 :loading="loading"
               >
-                Register
+                Зарегистрироваться
               </v-btn>
             </v-form>
           </v-card-text>
           <v-card-actions class="justify-center">
-            <span>Already have an account?</span>
+            <span>Уже есть аккаунт?</span>
             <v-btn variant="text" color="primary" to="/login">
-              Login
+              Войти
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -84,15 +84,15 @@ const handleRegister = async () => {
   errors.value = {}
 
   if (!form.value.name) {
-    errors.value.name = 'Name is required'
+    errors.value.name = 'Укажите имя'
     return
   }
   if (!form.value.email) {
-    errors.value.email = 'Email is required'
+    errors.value.email = 'Укажите email'
     return
   }
   if (!form.value.password || form.value.password.length < 6) {
-    errors.value.password = 'Password must be at least 6 characters'
+    errors.value.password = 'Пароль должен быть не менее 6 символов'
     return
   }
 
@@ -101,7 +101,7 @@ const handleRegister = async () => {
     await register(form.value.email, form.value.password, form.value.name)
     await router.push('/')
   } catch (e: any) {
-    error.value = e.response?.data?.error || 'Registration failed'
+    error.value = e.response?.data?.error || 'Ошибка регистрации'
   } finally {
     loading.value = false
   }

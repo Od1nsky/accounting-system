@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/invoice'" />
-      <h1 class="text-h4 ml-4">Edit Invoice</h1>
+      <h1 class="text-h4 ml-4">Редактирование накладной</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
@@ -10,25 +10,33 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.number"
-            label="Number"
+            label="Номер"
             type="text"
             variant="outlined"
           />
-          <v-text-field
+                    <v-select
             v-model="form.counterpartyId"
-            label="CounterpartyId"
-            type="number"
+            label="Контрагент"
             variant="outlined"
+            :items="counterpartyOptions.items"
+            :item-title="counterpartyOptions.itemTitle"
+            :item-value="counterpartyOptions.itemValue"
+            :loading="counterpartyOptions.loading"
+            clearable
           />
-          <v-text-field
+                    <v-select
             v-model="form.contractId"
-            label="ContractId"
-            type="number"
+            label="Договор"
             variant="outlined"
+            :items="contractOptions.items"
+            :item-title="contractOptions.itemTitle"
+            :item-value="contractOptions.itemValue"
+            :loading="contractOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.date"
-            label="Date"
+            label="Дата"
             type="date"
             variant="outlined"
           />
@@ -52,7 +60,7 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
@@ -69,14 +77,14 @@
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/invoice'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -96,6 +104,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -103,10 +113,12 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const counterpartyOptions = useRelationOptions('/api/counterparties')
+const contractOptions = useRelationOptions('/api/contracts', { titleKey: 'number' })
 const form = ref({
   number: '',
-  counterpartyId: 0,
-  contractId: 0,
+  counterpartyId: null as number | null,
+  contractId: null as number | null,
   date: '',
   dueDate: '',
   totalAmount: 0,
@@ -122,7 +134,7 @@ const fetchItem = async () => {
     const response = await api.get(`/api/invoices/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -135,15 +147,18 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.put(`/api/invoices/${route.params.id}`, form.value)
+    success('Счёт-фактура обновлён')
     router.push('/invoice')
   } catch (error) {
-    console.error('Failed to update invoice:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  counterpartyOptions.fetchOptions()
+  contractOptions.fetchOptions()
   fetchItem()
 })
 </script>

@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/asset'" />
-      <h1 class="text-h4 ml-4">Edit Asset</h1>
+      <h1 class="text-h4 ml-4">Редактирование актива</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
@@ -10,7 +10,7 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.name"
-            label="Name"
+            label="Название"
             type="text"
             variant="outlined"
           />
@@ -22,13 +22,13 @@
           />
           <v-text-field
             v-model="form.category"
-            label="Category"
+            label="Категория"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.cost"
-            label="Cost"
+            label="Стоимость"
             type="number"
             variant="outlined"
           />
@@ -52,7 +52,7 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
@@ -62,23 +62,27 @@
             type="text"
             variant="outlined"
           />
-          <v-text-field
+                    <v-select
             v-model="form.responsiblePersonId"
-            label="ResponsiblePersonId"
-            type="number"
+            label="Ответственный"
             variant="outlined"
+            :items="responsiblePersonOptions.items"
+            :item-title="employeeTitle"
+            :item-value="responsiblePersonOptions.itemValue"
+            :loading="responsiblePersonOptions.loading"
+            clearable
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/asset'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -98,6 +102,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -105,6 +111,13 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const responsiblePersonOptions = useRelationOptions('/api/employees')
+const employeeTitle = (item: any) => {
+  if (!item) return ''
+  const first = item.firstName ?? item.firstname
+  const last = item.lastName ?? item.lastname
+  return [first, last].filter(Boolean).join(' ') || String(item.id ?? '')
+}
 const form = ref({
   name: '',
   inventoryNumber: '',
@@ -115,7 +128,7 @@ const form = ref({
   residualValue: 0,
   status: '',
   location: '',
-  responsiblePersonId: 0
+  responsiblePersonId: null as number | null
 })
 
 const fetchItem = async () => {
@@ -124,7 +137,7 @@ const fetchItem = async () => {
     const response = await api.get(`/api/assets/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -137,15 +150,17 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.put(`/api/assets/${route.params.id}`, form.value)
+    success('Актив обновлён')
     router.push('/asset')
   } catch (error) {
-    console.error('Failed to update asset:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  responsiblePersonOptions.fetchOptions()
   fetchItem()
 })
 </script>

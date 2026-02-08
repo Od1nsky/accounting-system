@@ -2,27 +2,31 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/milestone'" />
-      <h1 class="text-h4 ml-4">Edit Milestone</h1>
+      <h1 class="text-h4 ml-4">Редактирование этапа</h1>
     </div>
 
     <v-card v-if="!loading" max-width="800">
       <v-card-text>
         <v-form ref="formRef" @submit.prevent="handleSubmit">
-          <v-text-field
+                    <v-select
             v-model="form.projectId"
-            label="ProjectId"
-            type="number"
+            label="Проект"
             variant="outlined"
+            :items="projectOptions.items"
+            :item-title="projectOptions.itemTitle"
+            :item-value="projectOptions.itemValue"
+            :loading="projectOptions.loading"
+            clearable
           />
           <v-text-field
             v-model="form.name"
-            label="Name"
+            label="Название"
             type="text"
             variant="outlined"
           />
           <v-textarea
             v-model="form.description"
-            label="Description"
+            label="Описание"
             variant="outlined"
             rows="3"
           />
@@ -40,7 +44,7 @@
           />
           <v-text-field
             v-model="form.status"
-            label="Status"
+            label="Статус"
             type="text"
             variant="outlined"
           />
@@ -57,14 +61,14 @@
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/milestone'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="submitting"
             >
-              Update
+              Сохранить
             </v-btn>
           </div>
         </v-form>
@@ -84,6 +88,8 @@ definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const route = useRoute()
 const api = useApi()
 const router = useRouter()
@@ -91,8 +97,9 @@ const formRef = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 
+const projectOptions = useRelationOptions('/api/projects')
 const form = ref({
-  projectId: 0,
+  projectId: null as number | null,
   name: '',
   description: '',
   dueDate: '',
@@ -108,7 +115,7 @@ const fetchItem = async () => {
     const response = await api.get(`/api/milestones/${route.params.id}`)
     form.value = response.data
   } catch (error) {
-    console.error('Failed to fetch item:', error)
+    showError('Не удалось загрузить данные')
   } finally {
     loading.value = false
   }
@@ -121,15 +128,17 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     await api.put(`/api/milestones/${route.params.id}`, form.value)
+    success('Веха обновлена')
     router.push('/milestone')
   } catch (error) {
-    console.error('Failed to update milestone:', error)
+    showError('Не удалось обновить запись')
   } finally {
     submitting.value = false
   }
 }
 
 onMounted(() => {
+  projectOptions.fetchOptions()
   fetchItem()
 })
 </script>

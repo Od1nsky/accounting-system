@@ -10,7 +10,7 @@ export class AuthController {
       const { email, password, name, role }: RegisterRequest = req.body;
 
       // Check if user exists
-      const existingUser = UserModel.findByEmail(email);
+      const existingUser = await UserModel.findByEmail(email);
       if (existingUser) {
         res.status(400).json({ error: 'User with this email already exists' });
         return;
@@ -20,7 +20,7 @@ export class AuthController {
       const hashedPassword = await hashPassword(password);
 
       // Create user
-      const user = UserModel.create({
+      const user = await UserModel.create({
         email,
         password: hashedPassword,
         name,
@@ -54,7 +54,7 @@ export class AuthController {
       const { email, password }: LoginRequest = req.body;
 
       // Find user
-      const user = UserModel.findByEmail(email);
+      const user = await UserModel.findByEmail(email);
       if (!user) {
         res.status(401).json({ error: 'Invalid email or password' });
         return;
@@ -96,7 +96,7 @@ export class AuthController {
         return;
       }
 
-      const user = UserModel.findById(req.user.userId);
+      const user = await UserModel.findById(req.user.userId);
       if (!user) {
         res.status(404).json({ error: 'User not found' });
         return;
@@ -116,7 +116,7 @@ export class AuthController {
 
   static async getUsers(_req: AuthRequest, res: Response): Promise<void> {
     try {
-      const users = UserModel.findAll();
+      const users = await UserModel.findAll();
       res.json(users.map(user => ({
         id: user.id,
         email: user.email,
@@ -135,7 +135,7 @@ export class AuthController {
       const userId = parseInt(req.params.id);
       const { name, email, role } = req.body;
 
-      const user = UserModel.update(userId, { name, email, role });
+      const user = await UserModel.update(userId, { name, email, role });
       if (!user) {
         res.status(404).json({ error: 'User not found' });
         return;
@@ -157,7 +157,7 @@ export class AuthController {
     try {
       const userId = parseInt(req.params.id);
 
-      const success = UserModel.delete(userId);
+      const success = await UserModel.delete(userId);
       if (!success) {
         res.status(404).json({ error: 'User not found' });
         return;

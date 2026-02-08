@@ -2,7 +2,7 @@
   <div>
     <div class="d-flex align-center mb-6">
       <v-btn icon="mdi-arrow-left" variant="text" :to="'/employee'" />
-      <h1 class="text-h4 ml-4">Create Employee</h1>
+      <h1 class="text-h4 ml-4">Создание сотрудника</h1>
     </div>
 
     <v-card max-width="800">
@@ -10,52 +10,48 @@
         <v-form ref="formRef" @submit.prevent="handleSubmit">
           <v-text-field
             v-model="form.firstName"
-            label="FirstName"
+            label="Имя"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.lastName"
-            label="LastName"
+            label="Фамилия"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.middleName"
-            label="MiddleName"
+            label="Отчество"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.position"
-            label="Position"
+            label="Должность"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.department"
-            label="Department"
+            label="Отдел"
             type="text"
             variant="outlined"
           />
           <v-text-field
             v-model="form.hireDate"
-            label="HireDate"
+            label="Дата приёма"
             type="date"
             variant="outlined"
+            :rules="[dateNotFutureRule]"
           />
           <v-text-field
             v-model="form.salary"
-            label="Salary"
+            label="Зарплата"
             type="number"
             variant="outlined"
           />
-          <v-text-field
-            v-model="form.phone"
-            label="Phone"
-            type="text"
-            variant="outlined"
-          />
+                    <PhoneInput v-model="form.phone" :rules="[phoneRule]" />
           <v-text-field
             v-model="form.email"
             label="Email"
@@ -64,25 +60,25 @@
           />
           <v-textarea
             v-model="form.passportData"
-            label="PassportData"
+            label="Паспорт"
             variant="outlined"
             rows="3"
           />
           <v-checkbox
             v-model="form.isActive"
-            label="IsActive"
+            label="Активен"
           />
 
           <div class="d-flex justify-end mt-4">
             <v-btn variant="text" :to="'/employee'" class="mr-2">
-              Cancel
+              Отмена
             </v-btn>
             <v-btn
               type="submit"
               color="primary"
               :loading="loading"
             >
-              Create
+              Создать
             </v-btn>
           </div>
         </v-form>
@@ -92,10 +88,14 @@
 </template>
 
 <script setup lang="ts">
+import { phoneRule, dateNotFutureRule } from '~/utils/validation'
+
 definePageMeta({
   middleware: 'auth'
 })
 
+
+const { success, error: showError } = useSnackbar()
 const api = useApi()
 const router = useRouter()
 const formRef = ref<any>(null)
@@ -122,9 +122,10 @@ const handleSubmit = async () => {
   loading.value = true
   try {
     await api.post('/api/employees', form.value)
+    success('Сотрудник создан')
     router.push('/employee')
   } catch (error) {
-    console.error('Failed to create employee:', error)
+    showError('Не удалось создать запись')
   } finally {
     loading.value = false
   }
